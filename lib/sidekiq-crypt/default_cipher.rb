@@ -34,7 +34,33 @@ module Sidekiq
         end
       end
 
-      class Decrypt; end
+      class Decrypt
+        attr_reader :cipher
+
+        def initialize(iv)
+          @cipher = OpenSSL::Cipher::AES.new(256, :CBC).decrypt
+          cipher.key = ENV['CIPHER_KEY']
+          cipher.iv = iv
+        end
+
+        def self.read_iv_from_redis(job_id)
+          header = read_encryption_header(job_id)
+
+          Base64.decode64(JSON.parse(header[0])['nonce'])
+        end
+
+        def self.read_encryption_header(job_id)
+          Sidekiq.redis_pool.with do |conn|
+            conn.smembers("sidekiq-crpyt-header:#{job_id}")
+          end
+        end
+
+        def self.call(confidential_param, iv)
+          decryptor_cipher = new(iv).cipher
+
+          decryptor_cipher.update(Base64.decode64(confidential_param.to_s)) + decryptor_cipher.final
+        end
+      end
     end
   end
 end
