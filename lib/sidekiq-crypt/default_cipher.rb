@@ -7,58 +7,64 @@ module Sidekiq
       CIPHER_KEY = ENV['CIPHER_KEY']
 
       class Encrypt
-        attr_reader :cipher
-
-        def self.random_iv
-          OpenSSL::Cipher::AES.new(256, :CBC).encrypt.random_iv
-        end
-
-        def self.write_encryption_header_to_redis(job_id, iv)
-          Sidekiq.redis_pool.with do |conn|
-            conn.sadd("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(iv)))
+        class << self
+          def random_iv
+            OpenSSL::Cipher::AES.new(256, :CBC).encrypt.random_iv
           end
-        end
 
-        def self.call(confidential_param, iv)
-          encryptor = new(iv)
-          # use base64 to prevent Encoding::UndefinedConversionError
-          Base64.encode64(encryptor.cipher.update(confidential_param.to_s) + encryptor.cipher.final)
-        end
+          def write_encryption_header_to_redis(job_id, iv)
+            Sidekiq.redis_pool.with do |conn|
+              conn.sadd("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(iv)))
+            end
+          end
 
-        def initialize(iv)
-          @iv = iv
-          @cipher = OpenSSL::Cipher::AES.new(256, :CBC).encrypt
+          def call(confidential_param, iv)
+            encryptor = cipher(iv)
+            # use base64 to prevent Encoding::UndefinedConversionError
+            Base64.encode64(encryptor.update(confidential_param.to_s) + encryptor.final)
+          end
 
-          cipher.key = Sidekiq::Crypt::DefaultCipher::CIPHER_KEY
-          cipher.iv = iv
+          private
+
+          def cipher(iv)
+            cipher = OpenSSL::Cipher::AES.new(256, :CBC).encrypt
+            cipher.key = Sidekiq::Crypt::DefaultCipher::CIPHER_KEY
+            cipher.iv = iv
+
+            cipher
+          end
         end
       end
 
       class Decrypt
-        attr_reader :cipher
+        class << self
+          def read_iv_from_redis(job_id)
+            header = read_encryption_header(job_id)
 
-        def initialize(iv)
-          @cipher = OpenSSL::Cipher::AES.new(256, :CBC).decrypt
-          cipher.key = ENV['CIPHER_KEY']
-          cipher.iv = iv
-        end
-
-        def self.read_iv_from_redis(job_id)
-          header = read_encryption_header(job_id)
-
-          Base64.decode64(JSON.parse(header[0])['nonce'])
-        end
-
-        def self.read_encryption_header(job_id)
-          Sidekiq.redis_pool.with do |conn|
-            conn.smembers("sidekiq-crpyt-header:#{job_id}")
+            Base64.decode64(JSON.parse(header[0])['nonce'])
           end
-        end
 
-        def self.call(confidential_param, iv)
-          decryptor_cipher = new(iv).cipher
+          def call(confidential_param, iv)
+            decryptor_cipher = cipher(iv)
 
-          decryptor_cipher.update(Base64.decode64(confidential_param.to_s)) + decryptor_cipher.final
+            decryptor_cipher.update(Base64.decode64(confidential_param.to_s)) + decryptor_cipher.final
+          end
+
+          private
+
+          def read_encryption_header(job_id)
+            Sidekiq.redis_pool.with do |conn|
+              conn.smembers("sidekiq-crpyt-header:#{job_id}")
+            end
+          end
+
+          def cipher(iv)
+            cipher = OpenSSL::Cipher::AES.new(256, :CBC).decrypt
+            cipher.key = Sidekiq::Crypt::DefaultCipher::CIPHER_KEY
+            cipher.iv = iv
+
+            cipher
+          end
         end
       end
     end

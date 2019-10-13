@@ -1,0 +1,34 @@
+PATH
+  remote: .
+  specs:
+    sidekiq-crypt (0.1.0)
+      sidekiq (>= 3.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    concurrent-ruby (1.0.5)
+    connection_pool (2.2.1)
+    minitest (5.11.3)
+    rack (1.6.11)
+    rack-protection (2.0.1)
+      rack
+    rake (10.4.2)
+    redis (3.3.5)
+    sidekiq (4.2.10)
+      concurrent-ruby (~> 1.0)
+      connection_pool (~> 2.2, >= 2.2.0)
+      rack-protection (>= 1.5.0)
+      redis (~> 3.2, >= 3.2.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.17)
+  minitest (~> 5.0)
+  rake (~> 10.0)
+  sidekiq-crypt!
+
+BUNDLED WITH
+   1.17.3

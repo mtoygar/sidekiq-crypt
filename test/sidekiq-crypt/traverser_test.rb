@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require 'sidekiq-crypt/traverser'
 
-class TraverserTest < Minitest::Test
+class TraverserTest < Sidekiq::Crypt::TestCase
   FILTERS = Struct.new(:filters)
 
   def test_override_filtered_parameter

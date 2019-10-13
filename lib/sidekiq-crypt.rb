@@ -6,11 +6,15 @@ require 'sidekiq-crypt/server_middleware'
 module Sidekiq
   module Crypt
     class << self
-      def configure(options = {})
-        @configuration = Configuration.new(options)
-        yield(@configuration) if block_given?
+      def configuration
+        @configuration ||= Configuration.new
+      end
 
-        raise 'you must specify at least one filter' if @configuration.filters.blank?
+      def configure(options = {})
+        yield(configuration) if block_given?
+
+        configuration.filters.flatten!
+        raise 'you must specify at least one filter' if configuration.filters.empty?
 
         inject_sidekiq_middlewares
       end
@@ -18,17 +22,17 @@ module Sidekiq
       def inject_sidekiq_middlewares
         ::Sidekiq.configure_client do |config|
           config.client_middleware do |chain|
-            chain.add Sidekiq::Crypt::ClientMiddleware, configuration: @configuration
+            chain.add Sidekiq::Crypt::ClientMiddleware, configuration: configuration
           end
         end
 
         ::Sidekiq.configure_server do |config|
           config.client_middleware do |chain|
-            chain.add Sidekiq::Crypt::ClientMiddleware, configuration: @configuration
+            chain.add Sidekiq::Crypt::ClientMiddleware, configuration: configuration
           end
 
           config.server_middleware do |chain|
-            chain.add Sidekiq::Crypt::ServerMiddleware, configuration: @configuration
+            chain.add Sidekiq::Crypt::ServerMiddleware, configuration: configuration
           end
         end
       end
