@@ -30,6 +30,11 @@ jobs:
           command: |
             bundle install --jobs=4 --retry=3 --path vendor/bundle
 
+      - run:
+          name: install dependencies for appraisal
+          command: |
+            bundle exec appraisal install
+
       - save_cache:
           paths:
             - ./vendor/bundle
@@ -38,7 +43,7 @@ jobs:
       # run tests!
       - run:
           name: run tests
-          command: bundle exec rake test
+          command: bundle exec appraisal 5.2 rake test
 
       # collect reports
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/

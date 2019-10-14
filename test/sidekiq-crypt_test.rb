@@ -1,9 +1,8 @@
 require "test_helper"
 
 class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
-
   def setup
-    # resets filters in configuration
+    # resets filters in configuration(it is memoized)
     Sidekiq::Crypt.configuration.filters.map!{|_filter| []}.flatten!
   end
 

@@ -41,3 +41,5 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Code of Conduct
 
 Everyone interacting in the Sidekiq::Crypt project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/sidekiq-crypt/blob/master/CODE_OF_CONDUCT.md).
+# sidekiq-crypt
+an attempt to encrypt sensitive job attributes on redis(an alternative to Sidekiq::Enterprise::Crypto)

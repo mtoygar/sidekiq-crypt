@@ -3,8 +3,6 @@ require 'uri'
 module Sidekiq
   module Crypt
     class Traverser
-      RECURSION = '[RECURSION]'.freeze
-
       def initialize(configuration)
         @filters = configuration.filters
       end
