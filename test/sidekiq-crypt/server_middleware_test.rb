@@ -21,6 +21,20 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     assert_equal('A SECRET', params['args'][1]['secret_key2'])
   end
 
+  def test_filters_job_params_on_job_failure
+    params = job_params # shallow copy params from job_params to assert later
+
+    error = StandardError.new
+    middleware_error = assert_raises do
+      server_middleware.call(DummyWorker, params, 'default', nil) { raise error }
+    end
+
+    assert_equal('[FILTERED]', params['args'][1]['secret_key1'])
+    assert_equal('[FILTERED]', params['args'][1]['secret_key2'])
+    assert_equal('123', params['args'][1]['some_key'])
+    assert_equal(middleware_error, error)
+  end
+
   private
 
   def server_middleware

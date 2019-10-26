@@ -1,6 +1,8 @@
 module Sidekiq
   module Crypt
     class ServerMiddleware
+      FILTERED = '[FILTERED]'.freeze
+
       def initialize(opts = {})
         configuration = opts[:configuration]
 
@@ -13,6 +15,11 @@ module Sidekiq
         @traverser.traverse!(job['args'], decryption_proc)
 
         yield
+      rescue => error
+        filter_proc = Proc.new { |param| param = FILTERED }
+        @traverser.traverse!(job['args'], filter_proc)
+
+        raise error
       end
 
       private
