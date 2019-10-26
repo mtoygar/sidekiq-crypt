@@ -1,7 +1,54 @@
----
-sudo: false
 language: ruby
-cache: bundler
+
+services:
+  - redis-server
+
 rvm:
-  - 2.3.5
-before_install: gem install bundler -v 1.17.3
+  - 2.2.10
+  - 2.3.8
+  - 2.4.5
+  - 2.5.3
+  - 2.6.0
+  - ruby-head
+
+gemfile:
+  - Gemfile
+  - gemfiles/rails-6.0-stable.gemfile
+  - gemfiles/rails-5.2-stable.gemfile
+  - gemfiles/rails-5.0-stable.gemfile
+  - gemfiles/rails-4.2-stable.gemfile
+
+matrix:
+  exclude:
+    - rvm: 2.2.10
+      gemfile: Gemfile
+    - rvm: 2.2.10
+      gemfile: gemfiles/rails-6.0-stable.gemfile
+    - rvm: 2.2.10
+      gemfile: gemfiles/rails-5.2-stable.gemfile
+    - rvm: 2.3.8
+      gemfile: gemfiles/rails-6.0-stable.gemfile
+    - rvm: 2.4.5
+      gemfile: gemfiles/rails-6.0-stable.gemfile
+    - rvm: 2.6.0
+      gemfile: gemfiles/rails-4.2-stable.gemfile
+    - rvm: ruby-head
+      gemfile: gemfiles/rails-4.2-stable.gemfile
+  allow_failures:
+    - rvm: ruby-head
+    - gemfile: gemfiles/rails-6.0-stable.gemfile
+
+cache: bundler
+
+env:
+  matrix:
+    - CIPHER_KEY=ThisPasswordIsReallyHardToGuess!
+
+before_install:
+  - gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true
+  - gem install bundler -v '< 2'
+  - "rm ${BUNDLE_GEMFILE}.lock"
+
+before_script: "bundle update"
+
+script: "bundle exec rake test"

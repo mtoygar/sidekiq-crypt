@@ -1,10 +1,11 @@
 require File.expand_path('../boot', __FILE__)
 
-require 'rails/all'
+require "rails/railtie" # Only for Rails >= 4.2
+require "rails/test_unit/railtie"
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
-Bundler.require(*Rails.groups)
+Bundler.require(:default)
 
 module DummyRailties
   class Application < Rails::Application

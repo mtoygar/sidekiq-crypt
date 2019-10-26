@@ -3,18 +3,18 @@
 require "test_helper"
 require "sidekiq/testing"
 
-class DummyWorker; end
-
 class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
+  class DummyWorker; end
+
   def setup
     Sidekiq.redis do |conn|
       conn.sadd("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(valid_iv)))
     end
+    sleep 0.05
   end
 
   def test_decrypts_filtered_job_params
-    # shallow copy params from job_params to assert later
-    params = job_params
+    params = job_params # shallow copy params from job_params to assert later
     server_middleware.call(DummyWorker, params, 'default', nil) {}
 
     assert_equal('1234123412341234', params['args'][1]['secret_key1'])

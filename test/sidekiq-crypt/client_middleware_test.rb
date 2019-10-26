@@ -3,9 +3,9 @@
 require "test_helper"
 require "sidekiq/testing"
 
-class DummyWorker; end
-
 class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
+  class DummyWorker; end
+
   def test_writes_encryption_header_to_redis
     stub_iv_creation do
       client_middleware.call(DummyWorker, job_params, 'default', nil) {}
