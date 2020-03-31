@@ -11,6 +11,8 @@ require "dummy-app/config/environment"
 class Sidekiq::Crypt::TestCase < Minitest::Test
   def setup
     flush_redis
+    reset_configured_filters
+
     super
   end
 
@@ -19,5 +21,9 @@ class Sidekiq::Crypt::TestCase < Minitest::Test
   def flush_redis
     Sidekiq.redis { |conn| conn.flushall }
     sleep 0.05
+  end
+
+  def reset_configured_filters
+    Sidekiq::Crypt.configuration.filters.map!{|_filter| []}.flatten!
   end
 end

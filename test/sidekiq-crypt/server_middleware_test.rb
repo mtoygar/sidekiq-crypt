@@ -8,9 +8,12 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def setup
     Sidekiq.redis do |conn|
-      conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(valid_iv)))
+      conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(
+        nonce: Base64.encode64(valid_iv),
+        encrypted_keys: [:secret_key1, 'secret_key2']
+      ))
     end
-    sleep 0.05
+    sleep 0.2
   end
 
   def test_decrypts_filtered_job_params
@@ -38,7 +41,7 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
   private
 
   def server_middleware
-    Sidekiq::Crypt::ServerMiddleware.new(configuration: config)
+    Sidekiq::Crypt::ServerMiddleware.new
   end
 
   def valid_iv
@@ -64,13 +67,5 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def job_id
     '5178fe171bdb2e925b3b2020'
-  end
-
-  def config
-    config = Sidekiq::Crypt::Configuration.new
-    config.filters << [/^secret.*/]
-    config.filters.flatten!
-
-    config
   end
 end

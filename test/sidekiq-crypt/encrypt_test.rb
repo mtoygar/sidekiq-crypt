@@ -10,10 +10,11 @@ class EncryptTest < Sidekiq::Crypt::TestCase
   end
 
   def test_writes_encryption_header_to_redis
-    encryptor.write_encryption_header_to_redis('123', valid_iv)
+    encryptor.write_encryption_header_to_redis('123', [:key1, :key2], valid_iv)
 
     nonce_payload = redis.get("sidekiq-crpyt-header:123")
-    assert_equal({ 'nonce' => Base64.encode64(valid_iv) }, JSON.parse(nonce_payload))
+    assert_equal(Base64.encode64(valid_iv), JSON.parse(nonce_payload)['nonce'])
+    assert_equal(['key1', 'key2'], JSON.parse(nonce_payload)['encrypted_keys'])
   end
 
   def test_encrypts_given_string

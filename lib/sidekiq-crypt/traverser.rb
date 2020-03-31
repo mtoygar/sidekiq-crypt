@@ -3,8 +3,8 @@ require 'uri'
 module Sidekiq
   module Crypt
     class Traverser
-      def initialize(configuration)
-        @filters = configuration.filters
+      def initialize(filters)
+        @filters = filters
       end
 
       def traverse!(args, proc)
@@ -28,7 +28,7 @@ module Sidekiq
 
           object.each do |key, value|
             if filter_match?(key)
-              clean_hash[key] = proc.call(value)
+              clean_hash[key] = proc.call(key, value)
             else
               clean_hash[key] = traverse(value, proc)
             end
@@ -47,7 +47,7 @@ module Sidekiq
         @filters.any? do |filter|
           case filter
           when Regexp then key.match(filter)
-          else key.include?(filter.to_s)
+          else key.to_s.include?(filter.to_s)
           end
         end
       end

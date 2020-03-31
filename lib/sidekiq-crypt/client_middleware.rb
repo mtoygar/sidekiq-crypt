@@ -1,4 +1,5 @@
 require 'sidekiq-crypt/traverser'
+require 'set'
 
 module Sidekiq
   module Crypt
@@ -6,14 +7,14 @@ module Sidekiq
       def initialize(opts = {})
         configuration = opts[:configuration]
 
-        @traverser = Traverser.new(configuration)
-        @encryption_cipher = configuration.encryption_class
-        @iv = @encryption_cipher.random_iv
+        @traverser = Traverser.new(configuration.filters)
+        @encrypted_keys = Set.new
       end
 
       def call(worker_class, job, queue, redis_pool)
+        @iv = DefaultCipher::Encrypt.random_iv
         @traverser.traverse!(job['args'], encryption_proc)
-        @encryption_cipher.write_encryption_header_to_redis(job['jid'], @iv)
+        DefaultCipher::Encrypt.write_encryption_header_to_redis(job['jid'], @encrypted_keys, @iv)
 
         yield
       end
@@ -21,7 +22,10 @@ module Sidekiq
       private
 
       def encryption_proc
-        Proc.new { |param| @encryption_cipher.call(param, @iv) }
+        Proc.new do |key, param|
+          @encrypted_keys << key
+          DefaultCipher::Encrypt.call(param, @iv)
+        end
       end
     end
   end

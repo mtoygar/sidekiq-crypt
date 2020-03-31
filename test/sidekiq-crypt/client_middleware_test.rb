@@ -6,12 +6,21 @@ require "sidekiq/testing"
 class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
   class DummyWorker; end
 
-  def test_writes_encryption_header_to_redis
+  def test_writes_nonce_to_encryption_header_on_redis
     stub_iv_creation do
       client_middleware.call(DummyWorker, job_params, 'default', nil) {}
 
       nonce_payload = redis.get("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020")
-      assert_equal({ 'nonce' => Base64.encode64(valid_iv) }, JSON.parse(nonce_payload))
+      assert_equal(Base64.encode64(valid_iv), JSON.parse(nonce_payload)['nonce'])
+    end
+  end
+
+  def test_writes_encrypted_keys_to_encryption_header_on_redis
+    stub_iv_creation do
+      client_middleware.call(DummyWorker, job_params, 'default', nil) {}
+
+      nonce_payload = redis.get("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020")
+      assert_equal(['secret_key1', 'secret_key2'], JSON.parse(nonce_payload)['encrypted_keys'])
     end
   end
 

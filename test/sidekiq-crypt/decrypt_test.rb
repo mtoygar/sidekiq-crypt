@@ -10,11 +10,11 @@ class DecryptTest < Sidekiq::Crypt::TestCase
   end
 
   def test_reads_iv_from_redis
-    assert_equal(valid_iv, decryptor.read_iv_from_redis(job_id))
+    assert_equal(valid_iv, decryptor.read_encryption_header_from_redis(job_id)[:iv])
   end
 
   def test_deletes_sidekiq_crypt_header_from_redis
-    decryptor.read_iv_from_redis(job_id)
+    decryptor.read_encryption_header_from_redis(job_id)
 
     Sidekiq.redis do |conn|
       assert_nil(conn.get("sidekiq-crpyt-header:#{job_id}"))

@@ -12,9 +12,12 @@ module Sidekiq
             OpenSSL::Cipher::AES.new(256, :CBC).encrypt.random_iv
           end
 
-          def write_encryption_header_to_redis(job_id, iv)
+          def write_encryption_header_to_redis(job_id, encrypted_keys, iv)
             Sidekiq.redis_pool.with do |conn|
-              conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(iv)))
+              conn.set(
+                "sidekiq-crpyt-header:#{job_id}",
+                JSON.generate(nonce: Base64.encode64(iv), encrypted_keys: encrypted_keys.to_a)
+              )
             end
           end
 
@@ -38,10 +41,13 @@ module Sidekiq
 
       class Decrypt
         class << self
-          def read_iv_from_redis(job_id)
-            header = read_encryption_header(job_id)
+          def read_encryption_header_from_redis(job_id)
+            parsed_header = JSON.parse(read_encryption_header(job_id))
 
-            Base64.decode64(JSON.parse(header)['nonce'])
+            {
+              iv: Base64.decode64(parsed_header['nonce']),
+              encrypted_keys: parsed_header['encrypted_keys']
+            }
           end
 
           def call(confidential_param, iv)

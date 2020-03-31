@@ -1,11 +1,6 @@
 require "test_helper"
 
 class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
-  def setup
-    # resets filters in configuration(it is memoized)
-    Sidekiq::Crypt.configuration.filters.map!{|_filter| []}.flatten!
-  end
-
   def test_that_it_has_a_version_number
     assert_equal('0.1.0', ::Sidekiq::Crypt::VERSION)
   end

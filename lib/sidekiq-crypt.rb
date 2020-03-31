@@ -1,17 +1,20 @@
-require "sidekiq-crypt/version"
-require 'sidekiq-crypt/configuration'
-require 'sidekiq-crypt/client_middleware'
-require 'sidekiq-crypt/server_middleware'
+require_relative "sidekiq-crypt/version"
+require_relative 'sidekiq-crypt/configuration'
+require_relative 'sidekiq-crypt/default_cipher'
+require_relative 'sidekiq-crypt/client_middleware'
+require_relative 'sidekiq-crypt/server_middleware'
 
 module Sidekiq
   module Crypt
     class << self
-      def configuration
-        @configuration ||= Configuration.new
+      attr_reader :configuration
+
+      def configuration(options = {})
+        @configuration ||= Configuration.new(options)
       end
 
       def configure(options = {})
-        yield(configuration) if block_given?
+        yield(configuration(options)) if block_given?
 
         configuration.filters.flatten!
         raise 'you must specify at least one filter' if configuration.filters.empty?
@@ -32,7 +35,7 @@ module Sidekiq
           end
 
           config.server_middleware do |chain|
-            chain.add Sidekiq::Crypt::ServerMiddleware, configuration: configuration
+            chain.add Sidekiq::Crypt::ServerMiddleware
           end
         end
       end
