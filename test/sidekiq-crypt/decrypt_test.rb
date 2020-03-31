@@ -5,12 +5,20 @@ require "test_helper"
 class DecryptTest < Sidekiq::Crypt::TestCase
   def setup
     Sidekiq.redis do |conn|
-      conn.sadd("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(valid_iv)))
+      conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(valid_iv)))
     end
   end
 
   def test_reads_iv_from_redis
     assert_equal(valid_iv, decryptor.read_iv_from_redis(job_id))
+  end
+
+  def test_deletes_sidekiq_crypt_header_from_redis
+    decryptor.read_iv_from_redis(job_id)
+
+    Sidekiq.redis do |conn|
+      assert_nil(conn.get("sidekiq-crpyt-header:#{job_id}"))
+    end
   end
 
   def test_decrypts_given_parameter

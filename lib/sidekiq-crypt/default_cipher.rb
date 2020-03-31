@@ -14,7 +14,7 @@ module Sidekiq
 
           def write_encryption_header_to_redis(job_id, iv)
             Sidekiq.redis_pool.with do |conn|
-              conn.sadd("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(iv)))
+              conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(iv)))
             end
           end
 
@@ -41,7 +41,7 @@ module Sidekiq
           def read_iv_from_redis(job_id)
             header = read_encryption_header(job_id)
 
-            Base64.decode64(JSON.parse(header[0])['nonce'])
+            Base64.decode64(JSON.parse(header)['nonce'])
           end
 
           def call(confidential_param, iv)
@@ -54,7 +54,9 @@ module Sidekiq
 
           def read_encryption_header(job_id)
             Sidekiq.redis_pool.with do |conn|
-              conn.smembers("sidekiq-crpyt-header:#{job_id}")
+              header = conn.get("sidekiq-crpyt-header:#{job_id}")
+              conn.del("sidekiq-crpyt-header:#{job_id}")
+              header
             end
           end
 

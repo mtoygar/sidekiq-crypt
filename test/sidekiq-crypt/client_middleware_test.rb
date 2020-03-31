@@ -10,9 +10,8 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
     stub_iv_creation do
       client_middleware.call(DummyWorker, job_params, 'default', nil) {}
 
-      nonce_payload = redis.smembers("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020")
-      assert_equal(1, nonce_payload.length)
-      assert_equal({ 'nonce' => Base64.encode64(valid_iv) }, JSON.parse(nonce_payload[0]))
+      nonce_payload = redis.get("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020")
+      assert_equal({ 'nonce' => Base64.encode64(valid_iv) }, JSON.parse(nonce_payload))
     end
   end
 

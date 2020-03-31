@@ -8,7 +8,7 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def setup
     Sidekiq.redis do |conn|
-      conn.sadd("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(valid_iv)))
+      conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(nonce: Base64.encode64(valid_iv)))
     end
     sleep 0.05
   end
