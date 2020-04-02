@@ -1,14 +1,15 @@
+# frozen_string_literal: true
+
 require_relative "sidekiq-crypt/version"
 require_relative 'sidekiq-crypt/configuration'
 require_relative 'sidekiq-crypt/cipher'
 require_relative 'sidekiq-crypt/client_middleware'
 require_relative 'sidekiq-crypt/server_middleware'
+require_relative 'sidekiq-crypt/worker'
 
 module Sidekiq
   module Crypt
     class << self
-      attr_reader :configuration
-
       def configuration(options = {})
         @configuration ||= Configuration.new(options)
       end

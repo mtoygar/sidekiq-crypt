@@ -1,7 +1,7 @@
 require File.expand_path('../../test_helper', __FILE__)
 
-class EncryptedWorkerTest < ActiveSupport::TestCase
+class DummyWorkerTest < ActiveSupport::TestCase
   def test_that_kitty_can_eat
-    assert_equal(12, EncryptedWorker.dummy)
+    assert_equal(12, DummyWorker.dummy)
   end
 end

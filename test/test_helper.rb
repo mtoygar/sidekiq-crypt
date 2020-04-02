@@ -2,11 +2,12 @@ ENV["RAILS_ENV"] = "test"
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
 $LOAD_PATH.unshift File.expand_path(__FILE__)
 
-require "sidekiq-crypt"
+require 'sidekiq-crypt'
 require 'sidekiq'
 
-require "minitest/autorun"
-require "dummy-app/config/environment"
+require 'minitest/autorun'
+require 'dummy-app/config/environment'
+require 'helpers/test_jobs'
 
 class Sidekiq::Crypt::TestCase < Minitest::Test
   def setup

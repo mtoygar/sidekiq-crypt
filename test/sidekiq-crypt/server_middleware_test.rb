@@ -4,8 +4,6 @@ require "test_helper"
 require "sidekiq/testing"
 
 class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
-  class DummyWorker; end
-
   def test_decrypts_filtered_job_params
     params = job_params # shallow copy params from job_params to assert later
     call_middleware(params) {}
@@ -48,6 +46,15 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     end
   end
 
+  def test_does_not_decrypt_when_sidekiq_crypt_worker_not_included
+    params = job_params('UnencryptedWorker') # shallow copy params from job_params to assert later
+    server_middleware.call(UnencryptedWorker, params, 'default', nil) {}
+
+    assert_equal('zrZcSf2pQZR5P1yBvYa9GdSmW0N+TMT1z6JzrPrgxWg=', params['args'][1]['secret_key1'])
+    assert_equal('PdHia8epi6I8IUs+Ya9WIQ==', params['args'][1]['secret_key2'])
+    assert_equal('123', params['args'][1]['some_key'])
+  end
+
   private
 
   def call_middleware(params, config_attrs: config_key_attrs, &block)
@@ -61,7 +68,7 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     end
     sleep 0.2
 
-    server_middleware.call(DummyWorker, params, 'default', nil, &block)
+    server_middleware.call(EncryptedWorker, params, 'default', nil, &block)
   end
 
   def server_middleware
@@ -77,9 +84,9 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     '1' * 32
   end
 
-  def job_params
+  def job_params(worker_name = 'EncryptedWorker')
     {
-      "class" => "DummyWorker",
+      "class" => worker_name,
       "args" =>[3, {
               "secret_key1" =>"zrZcSf2pQZR5P1yBvYa9GdSmW0N+TMT1z6JzrPrgxWg=",
               "secret_key2" =>"PdHia8epi6I8IUs+Ya9WIQ==",

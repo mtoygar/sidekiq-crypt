@@ -1,20 +1,38 @@
+# frozen_string_literal: true
+
 module Sidekiq
   module Crypt
     class ServerMiddleware
       FILTERED = '[FILTERED]'.freeze
 
       def call(worker_class, job, queue, redis_pool = {})
+        unless encrypted_worker?(job)
+          return yield
+        end
+
         @encryption_header = read_encryption_header_from_redis(job['jid'])
         Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], decryption_proc)
 
         yield
       rescue => error
-        Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], filter_proc)
+        if encrypted_worker?(job)
+          Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], filter_proc)
+        end
 
         raise error
       end
 
       private
+
+      def encrypted_worker?(job)
+        klass = worker_klass(job)
+        klass && klass.ancestors.include?(Sidekiq::Crypt::Worker)
+      end
+
+      def worker_klass(job)
+        klass = job['args'][0]['job_class'] || job['class'] rescue job['class']
+        klass.is_a?(Class) ? klass : Module.const_get(klass)
+      end
 
       def decryption_proc
         Proc.new do |_key, param|

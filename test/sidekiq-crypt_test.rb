@@ -17,7 +17,7 @@ class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
     end
   end
 
-  def test_raises_error_if_no_filter_specified
+  def test_raises_error_if_no_key_version_specified
     assert_raised_error('you must specify current key version') do
       configure_sidekiq_crypt(options: {})
     end

@@ -1,4 +1,4 @@
-class EncryptedWorker
+class DummyWorker
   def self.dummy
     12
   end
