@@ -6,11 +6,15 @@ require "sidekiq/testing"
 class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
   class DummyWorker; end
 
+  def setup
+    super
+    configure_sidekiq_crypt
+  end
+
   def test_writes_nonce_to_encryption_header_on_redis
     stub_iv_creation do
       client_middleware.call(DummyWorker, job_params, 'default', nil) {}
 
-      nonce_payload = redis.get("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020")
       assert_equal(Base64.encode64(valid_iv), JSON.parse(nonce_payload)['nonce'])
     end
   end
@@ -19,8 +23,15 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
     stub_iv_creation do
       client_middleware.call(DummyWorker, job_params, 'default', nil) {}
 
-      nonce_payload = redis.get("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020")
       assert_equal(['secret_key1', 'secret_key2'], JSON.parse(nonce_payload)['encrypted_keys'])
+    end
+  end
+
+  def test_writes_encryption_key_version_to_encryption_header_on_redis
+    stub_iv_creation do
+      client_middleware.call(DummyWorker, job_params, 'default', nil) {}
+
+      assert_equal('V1', JSON.parse(nonce_payload)['key_version'])
     end
   end
 
@@ -41,8 +52,8 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
     Sidekiq::Crypt::ClientMiddleware.new(configuration: config)
   end
 
-  def redis
-    Sidekiq.redis { |conn| conn }
+  def nonce_payload
+    Sidekiq.redis { |conn| conn.get("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020") }
   end
 
   def stub_iv_creation
@@ -73,7 +84,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
   end
 
   def config
-    config = Sidekiq::Crypt::Configuration.new
+    config = Sidekiq::Crypt::Configuration.new(config_key_attrs)
     config.filters << [/^secret.*/]
     config.filters.flatten!
 
@@ -82,7 +93,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def encrypted_value(value)
     cipher = OpenSSL::Cipher::AES.new(256, :CBC).encrypt
-    cipher.key = Sidekiq::Crypt::DefaultCipher::CIPHER_KEY
+    cipher.key = ENV['CIPHER_KEY']
     cipher.iv = valid_iv
 
     Base64.encode64(cipher.update(value.to_s) + cipher.final)

@@ -6,19 +6,9 @@ require "sidekiq/testing"
 class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
   class DummyWorker; end
 
-  def setup
-    Sidekiq.redis do |conn|
-      conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(
-        nonce: Base64.encode64(valid_iv),
-        encrypted_keys: [:secret_key1, 'secret_key2']
-      ))
-    end
-    sleep 0.2
-  end
-
   def test_decrypts_filtered_job_params
     params = job_params # shallow copy params from job_params to assert later
-    server_middleware.call(DummyWorker, params, 'default', nil) {}
+    call_middleware(params) {}
 
     assert_equal('1234123412341234', params['args'][1]['secret_key1'])
     assert_equal('A SECRET', params['args'][1]['secret_key2'])
@@ -29,7 +19,7 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
 
     error = StandardError.new
     middleware_error = assert_raises do
-      server_middleware.call(DummyWorker, params, 'default', nil) { raise error }
+      call_middleware(params) { raise error }
     end
 
     assert_equal('[FILTERED]', params['args'][1]['secret_key1'])
@@ -38,7 +28,41 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     assert_equal(middleware_error, error)
   end
 
+  def test_decrypts_filtered_params_using_expired_key
+    params = job_params # shallow copy params from job_params to assert later
+    key_attrs = {
+      current_key_version: 'V2', key_store: { 'V1' => ENV['CIPHER_KEY'], 'V2' => valid_key }
+    }
+
+    call_middleware(params, config_attrs: key_attrs) {}
+
+    assert_equal('1234123412341234', params['args'][1]['secret_key1'])
+    assert_equal('A SECRET', params['args'][1]['secret_key2'])
+  end
+
+  def test_deletes_sidekiq_crypt_header_from_redis
+    call_middleware(job_params) {}
+
+    Sidekiq.redis do |conn|
+      assert_nil(conn.get("sidekiq-crpyt-header:#{job_id}"))
+    end
+  end
+
   private
+
+  def call_middleware(params, config_attrs: config_key_attrs, &block)
+    configure_sidekiq_crypt(options: config_attrs)
+    Sidekiq.redis do |conn|
+      conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(
+        nonce: Base64.encode64(valid_iv),
+        encrypted_keys: [:secret_key1, 'secret_key2'],
+        key_version: 'V1'
+      ))
+    end
+    sleep 0.2
+
+    server_middleware.call(DummyWorker, params, 'default', nil, &block)
+  end
 
   def server_middleware
     Sidekiq::Crypt::ServerMiddleware.new
@@ -47,6 +71,10 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
   def valid_iv
     # a valid iv should be at least 16 bytes
     '1' * 16
+  end
+
+  def valid_key
+    '1' * 32
   end
 
   def job_params
