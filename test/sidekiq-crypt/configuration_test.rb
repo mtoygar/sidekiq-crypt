@@ -3,10 +3,6 @@
 require "test_helper"
 
 class ConfigurationTest < Sidekiq::Crypt::TestCase
-  def test_sets_rails_filters
-    skip 'TODO add tests for rails filters, maybe add a fixture app'
-  end
-
   def test_sets_current_key_version
     config = Sidekiq::Crypt::Configuration.new(dummy_key_attributes)
 

@@ -10,7 +10,7 @@ module Sidekiq
         @current_key_version = options.fetch(:current_key_version, nil)
         @key_store = options.fetch(:key_store, {})
 
-        include_rails_filter_parameters(options)
+        include_rails_filter_parameters(options[:exclude_rails_filters])
       end
 
       def current_key
@@ -23,9 +23,9 @@ module Sidekiq
 
       private
 
-      def include_rails_filter_parameters(options)
+      def include_rails_filter_parameters(exclude_rails_filters)
         return unless defined?(::Rails)
-        return if options[:exclude_rails_filters]
+        return if exclude_rails_filters
 
         @filters = ::Rails.application.config.filter_parameters
       end

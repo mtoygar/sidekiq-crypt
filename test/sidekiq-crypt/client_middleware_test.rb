@@ -11,7 +11,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def test_writes_nonce_to_encryption_header_on_redis
     stub_iv_creation do
-      client_middleware.call(EncryptedWorker, job_params, 'default', nil) {}
+      client_middleware.call(SecretWorker, job_params, 'default', nil) {}
 
       assert_equal(Base64.encode64(valid_iv), JSON.parse(nonce_payload)['nonce'])
     end
@@ -19,7 +19,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def test_writes_encrypted_keys_to_encryption_header_on_redis
     stub_iv_creation do
-      client_middleware.call(EncryptedWorker, job_params, 'default', nil) {}
+      client_middleware.call(SecretWorker, job_params, 'default', nil) {}
 
       assert_equal(['secret_key1', 'secret_key2'], JSON.parse(nonce_payload)['encrypted_keys'])
     end
@@ -27,7 +27,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def test_writes_encryption_key_version_to_encryption_header_on_redis
     stub_iv_creation do
-      client_middleware.call(EncryptedWorker, job_params, 'default', nil) {}
+      client_middleware.call(SecretWorker, job_params, 'default', nil) {}
 
       assert_equal('V1', JSON.parse(nonce_payload)['key_version'])
     end
@@ -37,7 +37,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
     stub_iv_creation do
       # shallow copy params from job_params to assert later
       params = job_params
-      client_middleware.call(EncryptedWorker, params, 'default', nil) {}
+      client_middleware.call(SecretWorker, params, 'default', nil) {}
 
       assert_equal(encrypted_value('1234123412341234'), params['args'][1]['secret_key1'])
       assert_equal(encrypted_value('A SECRET'), params['args'][1]['secret_key2'])
@@ -48,8 +48,8 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
   def test_encrypts_params_with_stated_keys
     stub_iv_creation do
       # shallow copy params from job_params to assert later
-      params = job_params('EncryptedWorkerWithKey')
-      client_middleware.call(EncryptedWorkerWithKey, params, 'default', nil) {}
+      params = job_params('SecretWorkerWithKey')
+      client_middleware.call(SecretWorkerWithKey, params, 'default', nil) {}
 
       assert_equal('1234123412341234', params['args'][1]['secret_key1'])
       assert_equal('A SECRET', params['args'][1]['secret_key2'])
@@ -59,8 +59,8 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def test_does_not_encrypt_filtered_params_if_sidekiq_crypt_worker_is_not_included
     # shallow copy params from job_params to assert later
-    params = job_params('UnencryptedWorker')
-    client_middleware.call(UnencryptedWorker, params, 'default', nil) {}
+    params = job_params('SafeWorker')
+    client_middleware.call(SafeWorker, params, 'default', nil) {}
 
     assert_equal('1234123412341234', params['args'][1]['secret_key1'])
     assert_equal('A SECRET', params['args'][1]['secret_key2'])
@@ -68,7 +68,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
   end
 
   def test_does_not_write_encryption_header_on_redis_if_sidekiq_crypt_worker_is_not_included
-    client_middleware.call(UnencryptedWorker, job_params('UnencryptedWorker'), 'default', nil) {}
+    client_middleware.call(SafeWorker, job_params('SafeWorker'), 'default', nil) {}
 
     assert_nil(nonce_payload)
   end
@@ -94,7 +94,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
     '1' * 16
   end
 
-  def job_params(worker_name = 'EncryptedWorker')
+  def job_params(worker_name = 'SecretWorker')
     {
       "class" => worker_name,
       "args" =>[3, {

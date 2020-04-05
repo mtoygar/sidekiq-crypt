@@ -1,10 +1,10 @@
-class UnencryptedWorker; end
+class SafeWorker; end
 
-class EncryptedWorker
+class SecretWorker
   include Sidekiq::Crypt::Worker
 end
 
-class EncryptedWorkerWithKey
+class SecretWorkerWithKey
   include Sidekiq::Crypt::Worker
 
   encrypted_keys :some_key

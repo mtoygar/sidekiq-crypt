@@ -46,9 +46,19 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     end
   end
 
+  def test_does_not_delete_sidekiq_crypt_header_from_redis_on_job_failure
+    assert_raises do
+      call_middleware(job_params) { raise error }
+    end
+
+    Sidekiq.redis do |conn|
+      refute_nil(conn.get("sidekiq-crpyt-header:#{job_id}"))
+    end
+  end
+
   def test_does_not_decrypt_when_sidekiq_crypt_worker_not_included
-    params = job_params('UnencryptedWorker') # shallow copy params from job_params to assert later
-    server_middleware.call(UnencryptedWorker, params, 'default', nil) {}
+    params = job_params('SafeWorker') # shallow copy params from job_params to assert later
+    server_middleware.call(SafeWorker, params, 'default', nil) {}
 
     assert_equal('zrZcSf2pQZR5P1yBvYa9GdSmW0N+TMT1z6JzrPrgxWg=', params['args'][1]['secret_key1'])
     assert_equal('PdHia8epi6I8IUs+Ya9WIQ==', params['args'][1]['secret_key2'])
@@ -68,7 +78,7 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     end
     sleep 0.2
 
-    server_middleware.call(EncryptedWorker, params, 'default', nil, &block)
+    server_middleware.call(SecretWorker, params, 'default', nil, &block)
   end
 
   def server_middleware
@@ -84,7 +94,7 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     '1' * 32
   end
 
-  def job_params(worker_name = 'EncryptedWorker')
+  def job_params(worker_name = 'SecretWorker')
     {
       "class" => worker_name,
       "args" =>[3, {

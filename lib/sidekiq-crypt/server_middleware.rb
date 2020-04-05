@@ -14,6 +14,8 @@ module Sidekiq
         Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], decryption_proc)
 
         yield
+
+        delete_encryption_header(job['jid'])
       rescue => error
         if encrypted_worker?(job)
           Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], filter_proc)
@@ -56,9 +58,13 @@ module Sidekiq
 
       def read_encryption_header(job_id)
         Sidekiq.redis do |conn|
-          header = conn.get("sidekiq-crpyt-header:#{job_id}")
+          conn.get("sidekiq-crpyt-header:#{job_id}")
+        end
+      end
+
+      def delete_encryption_header(job_id)
+        Sidekiq.redis do |conn|
           conn.del("sidekiq-crpyt-header:#{job_id}")
-          header
         end
       end
     end

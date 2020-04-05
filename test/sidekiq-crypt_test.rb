@@ -41,14 +41,6 @@ class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
     end
   end
 
-  def test_skips_rails_filter_params_on_demand
-    skip 'TODO add tests for skipping rails filter parameters, maybe add a fixture app'
-  end
-
-  def test_inject_sidekiq_middleware
-    skip 'TODO add tests to test middleware injection'
-  end
-
   private
 
   def assert_raised_error(error_message)
