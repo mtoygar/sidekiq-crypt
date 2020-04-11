@@ -36,6 +36,6 @@ class Sidekiq::Crypt::TestCase < Minitest::Test
   end
 
   def config_key_attrs
-    { current_key_version: 'V1', key_store: { 'V1' => ENV['CIPHER_KEY'] } }
+    { current_key_version: 'V1', key_store: { V1: ENV['CIPHER_KEY'] } }
   end
 end

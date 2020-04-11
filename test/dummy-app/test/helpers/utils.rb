@@ -7,7 +7,7 @@ module Utils
 
     Sidekiq::Crypt.configure(exclude_rails_filters: exclude_rails_filters) do |config|
       config.current_key_version = 'V1'
-      config.key_store = { 'V1' => ENV['CIPHER_KEY'] }
+      config.key_store = { V1: ENV['CIPHER_KEY'] }
       config.filters << filters
     end
   end

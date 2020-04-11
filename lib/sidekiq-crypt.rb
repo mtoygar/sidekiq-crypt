@@ -22,7 +22,7 @@ module Sidekiq
         raise 'you must specify current key version' if configuration.current_key_version.blank?
         raise 'you must specify a hash for key store' if configuration.key_store.blank?
         raise "current_key_version can't be found in key_store" if configuration.current_key.nil?
-        raise 'key is not valid' if invalid_key?
+        raise 'current key is not valid for encryption' if invalid_key?
 
         inject_sidekiq_middlewares
       end

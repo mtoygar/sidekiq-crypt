@@ -41,6 +41,24 @@ class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
     end
   end
 
+  def test_raises_error_if_current_key_is_not_valid_for_encryption
+    assert_raised_error('current key is not valid for encryption') do
+      configure_sidekiq_crypt(options: { current_key_version: 'V1', key_store: { 'V1' => 123 } })
+    end
+  end
+
+  def test_stringfy_key_store_keys_when_configure_used
+    configure_sidekiq_crypt(options: {
+      current_key_version: 'V1',
+      key_store: { V1: 'ThisPasswordIsReallyHardToGuess!', V2: 246 }
+    })
+
+    config = Sidekiq::Crypt.configuration
+
+    assert_equal('ThisPasswordIsReallyHardToGuess!', config.key_store['V1'])
+    assert_equal(246, config.key_store['V2'])
+  end
+
   private
 
   def assert_raised_error(error_message)

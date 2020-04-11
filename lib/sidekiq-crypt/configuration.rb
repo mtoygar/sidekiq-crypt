@@ -3,12 +3,13 @@
 module Sidekiq
   module Crypt
     class Configuration
-      attr_accessor :filters, :current_key_version, :key_store
+      attr_accessor :filters, :current_key_version
+      attr_reader :key_store
 
       def initialize(options = {})
         @filters = []
         @current_key_version = options.fetch(:current_key_version, nil)
-        @key_store = options.fetch(:key_store, {})
+        @key_store = options.fetch(:key_store, {}).transform_keys(&:to_s)
 
         include_rails_filter_parameters(options[:exclude_rails_filters])
       end
@@ -19,6 +20,10 @@ module Sidekiq
 
       def key_by_version(given_key)
         key_store[given_key]
+      end
+
+      def key_store=(key_store_hash)
+        @key_store = (key_store_hash || {}).transform_keys(&:to_s)
       end
 
       private
