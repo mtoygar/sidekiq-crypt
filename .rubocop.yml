@@ -1,0 +1,52 @@
+AllCops:
+  Exclude:
+    - 'Gemfile'
+    - 'db/*'
+    - 'config/*'
+    - 'script/**/*'
+    - 'test/dummy-app/bin/*'
+    - 'test/dummy-app/config/**/*'
+    - 'test/dummy-app/db/*'
+    - 'bin/*'
+    - vendor/**/*
+
+Layout/LineLength:
+  Max: 100
+
+Metrics/MethodLength:
+  Exclude:
+    - 'test/**/*_test.rb'
+
+Metrics/AbcSize:
+  Exclude:
+    - 'test/**/*_test.rb'
+
+Style/ClassAndModuleChildren:
+  Exclude:
+    - 'test/**/*_test.rb'
+
+Style/Documentation:
+  Enabled: false
+
+Naming/FileName:
+  Enabled: false
+
+# safe navigation is not a valid syntax for ruby 2.2
+Style/SafeNavigation:
+  Enabled: false
+
+# below should be explicitly stated for rubocop 0.81.0
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
+
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true

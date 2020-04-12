@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require "sidekiq/testing"
+require 'test_helper'
+require 'sidekiq/testing'
 
 class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
   def setup
@@ -21,7 +21,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
     stub_iv_creation do
       client_middleware.call(SecretWorker, job_params, 'default', nil) {}
 
-      assert_equal(['secret_key1', 'secret_key2'], JSON.parse(nonce_payload)['encrypted_keys'])
+      assert_equal(%w[secret_key1 secret_key2], JSON.parse(nonce_payload)['encrypted_keys'])
     end
   end
 
@@ -80,7 +80,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
   end
 
   def nonce_payload
-    Sidekiq.redis { |conn| conn.get("sidekiq-crpyt-header:5178fe171bdb2e925b3b2020") }
+    Sidekiq.redis { |conn| conn.get('sidekiq-crpyt-header:5178fe171bdb2e925b3b2020') }
   end
 
   def stub_iv_creation
@@ -96,17 +96,16 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def job_params(worker_name = 'SecretWorker')
     {
-      "class" => worker_name,
-      "args" =>[3, {
-              "secret_key1" =>"1234123412341234",
-              "secret_key2" =>"A SECRET",
-              "some_key" =>"123"
-            }
-        ],
-      "retry" =>false,
-      "queue" =>"default",
-      "jid" =>"5178fe171bdb2e925b3b2020",
-      "created_at" =>1570907859.9315178
+      'class' => worker_name,
+      'args' => [3, {
+        'secret_key1' => '1234123412341234',
+        'secret_key2' => 'A SECRET',
+        'some_key' => '123'
+      }],
+      'retry' => false,
+      'queue' => 'default',
+      'jid' => '5178fe171bdb2e925b3b2020',
+      'created_at' => 1_570_907_859.9315178
     }
   end
 

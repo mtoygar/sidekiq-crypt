@@ -1,7 +1,9 @@
-require File.expand_path('../../../test_helper', __FILE__)
-require File.expand_path('../../../helpers/redis_helpers', __FILE__)
-require File.expand_path('../../../helpers/sidekiq_helpers', __FILE__)
-require File.expand_path('../../../helpers/utils', __FILE__)
+# frozen_string_literal: true
+
+require File.expand_path('../../test_helper', __dir__)
+require File.expand_path('../../helpers/redis_helpers', __dir__)
+require File.expand_path('../../helpers/sidekiq_helpers', __dir__)
+require File.expand_path('../../helpers/utils', __dir__)
 
 class SidekiqCrypt::EncryptedWorkerWithKeysTest < ActiveSupport::TestCase
   include RedisHelpers
@@ -9,7 +11,7 @@ class SidekiqCrypt::EncryptedWorkerWithKeysTest < ActiveSupport::TestCase
   include Utils
 
   def setup
-    Sidekiq.redis {|c| c.flushdb }
+    Sidekiq.redis(&:flushdb)
     configure_sidekiq_crypt
   end
 
@@ -17,7 +19,7 @@ class SidekiqCrypt::EncryptedWorkerWithKeysTest < ActiveSupport::TestCase
     Sidekiq::Testing.disable! do
       job_id = SidekiqCrypt::EncryptedWorkerWithKeys.perform_async(password: '123456', divider: '0')
 
-      assert_equal(['password', 'divider'], sidekiq_crypt_header(job_id)['encrypted_keys'])
+      assert_equal(%w[password divider], sidekiq_crypt_header(job_id)['encrypted_keys'])
 
       assert_raises('TypeError') do
         execute_job

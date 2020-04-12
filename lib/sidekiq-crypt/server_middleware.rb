@@ -3,28 +3,30 @@
 module Sidekiq
   module Crypt
     class ServerMiddleware
-      FILTERED = '[FILTERED]'.freeze
+      FILTERED = '[FILTERED]'
 
-      def call(worker_class, job, queue, redis_pool = {})
-        unless encrypted_worker?(job)
-          return yield
-        end
+      def call(_worker_class, job, _queue, _redis_pool = {})
+        return yield unless encrypted_worker?(job)
 
-        @encryption_header = read_encryption_header_from_redis(job['jid'])
-        Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], decryption_proc)
+        encrypt_secret_params(job)
 
         yield
 
         delete_encryption_header(job['jid'])
-      rescue => error
+      rescue StandardError => e
         if encrypted_worker?(job)
           Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], filter_proc)
         end
 
-        raise error
+        raise e
       end
 
       private
+
+      def encrypt_secret_params(job)
+        @encryption_header = read_encryption_header_from_redis(job['jid'])
+        Traverser.new(@encryption_header[:encrypted_keys]).traverse!(job['args'], decryption_proc)
+      end
 
       def encrypted_worker?(job)
         klass = worker_klass(job)
@@ -32,18 +34,22 @@ module Sidekiq
       end
 
       def worker_klass(job)
-        klass = job['args'][0]['job_class'] || job['class'] rescue job['class']
+        klass = begin
+                  job['args'][0]['job_class'] || job['class']
+                rescue StandardError
+                  job['class']
+                end
         klass.is_a?(Class) ? klass : Module.const_get(klass)
       end
 
       def decryption_proc
-        Proc.new do |_key, param|
+        proc do |_key, param|
           Cipher.decrypt(param, @encryption_header[:iv], @encryption_header[:key_version])
         end
       end
 
       def filter_proc
-        Proc.new { |_key, param| param = FILTERED }
+        proc { |_key, _param| FILTERED }
       end
 
       def read_encryption_header_from_redis(job_id)

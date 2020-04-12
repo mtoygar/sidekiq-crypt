@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class ConfigurationTest < Sidekiq::Crypt::TestCase
   def test_sets_current_key_version

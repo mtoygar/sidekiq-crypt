@@ -29,27 +29,20 @@ module Sidekiq
           clean_hash = {}
 
           object.each do |key, value|
-            if filter_match?(key)
-              clean_hash[key] = proc.call(key, value)
-            else
-              clean_hash[key] = traverse(value, proc)
-            end
+            clean_hash[key] = filter_match?(key) ? proc.call(key, value) : traverse(value, proc)
           end
 
           clean_hash
-        when Array
-          object.map { |element| traverse(element, proc) }
+        when Array then object.map { |element| traverse(element, proc) }
         else object
         end
       end
 
       def filter_match?(key)
-        key = key.to_s
-
         @filters.any? do |filter|
           case filter
-          when Regexp then key.match(filter)
-          else key.to_s.include?(filter.to_s)
+          when Regexp then key.to_s.match(filter)
+          else key.to_s == filter.to_s
           end
         end
       end

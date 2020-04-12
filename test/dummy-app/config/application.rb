@@ -1,7 +1,9 @@
-require File.expand_path('../boot', __FILE__)
+# frozen_string_literal: true
 
-require "rails/railtie" # Only for Rails >= 4.2
-require "rails/test_unit/railtie"
+require File.expand_path('boot', __dir__)
+
+require 'rails/railtie' # Only for Rails >= 4.2
+require 'rails/test_unit/railtie'
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.

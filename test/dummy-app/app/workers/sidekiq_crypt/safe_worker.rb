@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SidekiqCrypt
   class SafeWorker
     include Sidekiq::Worker

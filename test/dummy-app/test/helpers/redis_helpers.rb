@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module RedisHelpers
   def sidekiq_crypt_header(job_id)
     header = Sidekiq.redis { |conn| conn.get("sidekiq-crpyt-header:#{job_id}") }

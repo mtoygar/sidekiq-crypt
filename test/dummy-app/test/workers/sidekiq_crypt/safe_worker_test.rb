@@ -1,6 +1,8 @@
-require File.expand_path('../../../test_helper', __FILE__)
-require File.expand_path('../../../helpers/redis_helpers', __FILE__)
-require File.expand_path('../../../helpers/utils', __FILE__)
+# frozen_string_literal: true
+
+require File.expand_path('../../test_helper', __dir__)
+require File.expand_path('../../helpers/redis_helpers', __dir__)
+require File.expand_path('../../helpers/utils', __dir__)
 
 class SidekiqCrypt::SafeWorkerTest < ActiveSupport::TestCase
   include RedisHelpers
@@ -8,7 +10,7 @@ class SidekiqCrypt::SafeWorkerTest < ActiveSupport::TestCase
   include Utils
 
   def setup
-    Sidekiq.redis {|c| c.flushdb }
+    Sidekiq.redis(&:flushdb)
     configure_sidekiq_crypt
   end
 

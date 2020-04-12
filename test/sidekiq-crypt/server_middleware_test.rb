@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require "sidekiq/testing"
+require 'test_helper'
+require 'sidekiq/testing'
 
 class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
   def test_decrypts_filtered_job_params
@@ -71,10 +71,10 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
     configure_sidekiq_crypt(options: config_attrs)
     Sidekiq.redis do |conn|
       conn.set("sidekiq-crpyt-header:#{job_id}", JSON.generate(
-        nonce: Base64.encode64(valid_iv),
-        encrypted_keys: [:secret_key1, 'secret_key2'],
-        key_version: 'V1'
-      ))
+                                                   nonce: Base64.encode64(valid_iv),
+                                                   encrypted_keys: [:secret_key1, 'secret_key2'],
+                                                   key_version: 'V1'
+                                                 ))
     end
     sleep 0.2
 
@@ -96,17 +96,16 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def job_params(worker_name = 'SecretWorker')
     {
-      "class" => worker_name,
-      "args" =>[3, {
-              "secret_key1" =>"zrZcSf2pQZR5P1yBvYa9GdSmW0N+TMT1z6JzrPrgxWg=",
-              "secret_key2" =>"PdHia8epi6I8IUs+Ya9WIQ==",
-              "some_key" =>"123"
-            }
-        ],
-      "retry" =>false,
-      "queue" =>"default",
-      "jid" =>job_id,
-      "created_at" =>1570907859.9315178
+      'class' => worker_name,
+      'args' => [3, {
+        'secret_key1' => 'zrZcSf2pQZR5P1yBvYa9GdSmW0N+TMT1z6JzrPrgxWg=',
+        'secret_key2' => 'PdHia8epi6I8IUs+Ya9WIQ==',
+        'some_key' => '123'
+      }],
+      'retry' => false,
+      'queue' => 'default',
+      'jid' => job_id,
+      'created_at' => 1_570_907_859.9315178
     }
   end
 

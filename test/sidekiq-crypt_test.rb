@@ -1,4 +1,6 @@
-require "test_helper"
+# frozen_string_literal: true
+
+require 'test_helper'
 
 class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
   def test_that_it_has_a_version_number
@@ -9,12 +11,6 @@ class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
     configure_sidekiq_crypt(filters: ['key', /^secret.*/])
 
     assert_equal(['key', /^secret.*/], Sidekiq::Crypt.configuration.filters)
-  end
-
-  def test_raises_error_if_no_filter_specified
-    assert_raised_error('you must specify at least one filter') do
-      configure_sidekiq_crypt(filters: [])
-    end
   end
 
   def test_raises_error_if_no_key_version_specified
@@ -49,9 +45,9 @@ class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
 
   def test_stringfy_key_store_keys_when_configure_used
     configure_sidekiq_crypt(options: {
-      current_key_version: 'V1',
-      key_store: { V1: 'ThisPasswordIsReallyHardToGuess!', V2: 246 }
-    })
+                              current_key_version: 'V1',
+                              key_store: { V1: 'ThisPasswordIsReallyHardToGuess!', V2: 246 }
+                            })
 
     config = Sidekiq::Crypt.configuration
 

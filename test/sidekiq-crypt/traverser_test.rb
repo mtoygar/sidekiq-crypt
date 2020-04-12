@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 require 'sidekiq-crypt/traverser'
 
 class TraverserTest < Sidekiq::Crypt::TestCase
@@ -18,13 +18,13 @@ class TraverserTest < Sidekiq::Crypt::TestCase
 
   def test_override_multiple_filtered_parameter
     args = [{ a: 123, b: 1 }]
-    traverse_with_args(args, ['a', 'b'])
+    traverse_with_args(args, %w[a b])
     assert_equal([{ a: 246, b: 2 }], args)
   end
 
   def test_override_multiple_filtered_with_separate_wrapper
     args = [{ a: 123, d: 1 }, [{ a: 1, b: 2 }], { c: 3 }]
-    traverse_with_args(args, ['a', 'b', 'c'])
+    traverse_with_args(args, %w[a b c])
     assert_equal([{ a: 246, d: 1 }, [{ a: 2, b: 4 }], { c: 6 }], args)
   end
 
@@ -60,6 +60,6 @@ class TraverserTest < Sidekiq::Crypt::TestCase
   end
 
   def double_proc
-    Proc.new { |_key, param| param * 2 }
+    proc { |_key, param| param * 2 }
   end
 end

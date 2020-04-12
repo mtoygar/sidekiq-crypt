@@ -11,11 +11,11 @@ module Sidekiq
         @encrypted_keys = Set.new
       end
 
-      def call(worker_class, job, queue, redis_pool)
+      def call(worker_class, job, _queue, _redis_pool)
         if encrypted_worker?(worker_class, job)
           @iv = Cipher.random_iv
           traverser.traverse!(job['args'], encryption_proc)
-          write_encryption_header_to_redis(job['jid'], encrypted_keys, @iv)
+          write_encryption_header_to_redis(job['jid'], encrypted_keys)
         end
 
         yield
@@ -34,12 +34,12 @@ module Sidekiq
         Traverser.new(@worker_klass.sidekiq_crypt_worker_filters || configuration.filters)
       end
 
-      def write_encryption_header_to_redis(job_id, encrypted_keys, iv)
+      def write_encryption_header_to_redis(job_id, encrypted_keys)
         Sidekiq.redis do |conn|
           conn.set(
             "sidekiq-crpyt-header:#{job_id}",
             JSON.generate(
-              nonce: Base64.encode64(iv),
+              nonce: Base64.encode64(@iv),
               encrypted_keys: encrypted_keys.to_a,
               key_version: Sidekiq::Crypt.configuration.current_key_version
             )
@@ -48,21 +48,23 @@ module Sidekiq
       end
 
       def encryption_proc
-        Proc.new do |key, param|
+        proc do |key, param|
           encrypted_keys << key
           Cipher.encrypt(param, @iv)
         end
       end
 
       def worker_class(worker_class, job)
-        klass = job['args'][0]['job_class'] || worker_class rescue worker_class
+        klass = begin
+                  job['args'][0]['job_class'] || worker_class
+                rescue StandardError
+                  worker_class
+                end
 
         if klass.is_a?(Class)
           klass
         elsif Module.const_defined?(klass)
           Module.const_get(klass)
-        else
-          nil
         end
       end
     end
