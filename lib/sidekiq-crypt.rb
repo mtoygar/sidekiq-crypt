@@ -15,7 +15,7 @@ module Sidekiq
       end
 
       def configure(options = {})
-        yield(configuration(options)) if block_given?
+        block_given? ? yield(configuration(options)) : configuration(options)
 
         configuration.filters.flatten!
         validate_configuration!
@@ -53,8 +53,13 @@ module Sidekiq
       def validate_configuration!
         raise 'you must specify current key version' if configuration.current_key_version.blank?
         raise 'you must specify a hash for key store' if configuration.key_store.blank?
-        raise "current_key_version can't be found in key_store" if configuration.current_key.nil?
+        raise "current_key_version can't be found in key_store" if current_raw_key.nil?
         raise 'current key is not valid for encryption' if invalid_key?
+      end
+
+      def current_raw_key
+        # returns the base64 encoded version of the key
+        configuration.key_store[configuration.current_key_version]
       end
 
       def invalid_key?

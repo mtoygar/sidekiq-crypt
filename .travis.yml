@@ -42,7 +42,7 @@ cache: bundler
 
 env:
   matrix:
-    - CIPHER_KEY=ThisPasswordIsReallyHardToGuess!
+    - CIPHER_KEY=VGhpc1Bhc3N3b3JkSXNSZWFsbHlIYXJkVG9HdWVzcyE=
 
 before_install:
   - gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true

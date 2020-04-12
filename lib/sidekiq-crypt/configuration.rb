@@ -15,11 +15,11 @@ module Sidekiq
       end
 
       def current_key
-        key_store[current_key_version]
+        Base64.strict_decode64(key_store[current_key_version])
       end
 
       def key_by_version(given_key)
-        key_store[given_key]
+        Base64.strict_decode64(key_store[given_key])
       end
 
       def key_store=(key_store_hash)

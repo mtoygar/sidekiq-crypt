@@ -18,13 +18,16 @@ class ConfigurationTest < Sidekiq::Crypt::TestCase
   def test_stringfy_key_store_keys
     config = Sidekiq::Crypt::Configuration.new(dummy_key_attributes)
 
-    assert_equal('old_key', config.key_store['V1'])
-    assert_equal('ThisPasswordIsReallyHardToGuess!', config.key_store['V2'])
+    assert_equal(Base64.strict_encode64('old_key'), config.key_store['V1'])
+    assert_equal(Base64.strict_encode64('ThisPasswordIsReallyHardToGuess!'), config.key_store['V2'])
   end
 
   private
 
   def dummy_key_attributes
-    { current_key_version: 'V2', key_store: { V1: 'old_key', V2: ENV['CIPHER_KEY'] } }
+    {
+      current_key_version: 'V2',
+      key_store: { V1: Base64.strict_encode64('old_key'), V2: ENV['CIPHER_KEY'] }
+    }
   end
 end

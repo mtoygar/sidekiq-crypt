@@ -119,7 +119,7 @@ class ClientMiddlewareTest < Sidekiq::Crypt::TestCase
 
   def encrypted_value(value)
     cipher = OpenSSL::Cipher::AES.new(256, :CBC).encrypt
-    cipher.key = ENV['CIPHER_KEY']
+    cipher.key = Base64.strict_decode64(ENV['CIPHER_KEY'])
     cipher.iv = valid_iv
 
     Base64.encode64(cipher.update(value.to_s) + cipher.final)

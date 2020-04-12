@@ -91,7 +91,7 @@ class ServerMiddlewareTest < Sidekiq::Crypt::TestCase
   end
 
   def valid_key
-    '1' * 32
+    Base64.strict_encode64('1' * 32)
   end
 
   def job_params(worker_name = 'SecretWorker')
