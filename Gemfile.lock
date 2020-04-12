@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sidekiq-crypt (0.1.0)
+    sidekiq-crypt (0.1.1)
       sidekiq (~> 5.0)
 
 GEM

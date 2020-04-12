@@ -4,7 +4,7 @@ require 'test_helper'
 
 class Sidekiq::CryptTest < Sidekiq::Crypt::TestCase
   def test_that_it_has_a_version_number
-    assert_equal('0.1.0', ::Sidekiq::Crypt::VERSION)
+    assert_equal('0.1.1', ::Sidekiq::Crypt::VERSION)
   end
 
   def test_adds_filters_using_configure
