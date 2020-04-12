@@ -40,7 +40,7 @@ You should add below block in an initializer. Since you can bump your encryption
 Sidekiq::Crypt.configure(current_key_version: current_key_version, key_store: key_store)
 ```
 
-Alternatively you can use below.
+Alternatively you can use below style too.
 ```ruby
 Sidekiq::Crypt.configure do |config|
   config.current_key_version = options[:current_key_version]
