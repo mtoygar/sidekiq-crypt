@@ -2,6 +2,10 @@
 
 sidekiq-crypt enables you to encryt your secret keys on redis. It is an alternative to [sidekiq's enterprise encryption](https://github.com/mperham/sidekiq/wiki/Ent-Encryption) feature. If you or your project has enough resources, you should prefer that option.
 
+After sidekiq-crypt parameters of your secret worker would look like below.
+
+> 79, {"credit_card_number"=>"agBCqI8vlvn4mx0L8vkbrJr1nstV459w4d6hVNqZC1A=\n", "name_on_credit_card"=>"h6fdq3kbXNXhfx/iKIy5fA==\n", "cvc"=>"wEAB4pCISRUvWVXtDPaOKA==\n", "expiration"=>"cgOI/Ks7BfldTlB+6F23LQ==\n", "installments"=>1}
+
 ## Installation
 
 Add this line to your application's Gemfile:
