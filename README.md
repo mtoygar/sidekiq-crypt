@@ -98,6 +98,27 @@ To disable rails filter params inclusion, you must call configure method with `e
 Sidekiq::Crypt.configure(exclude_rails_filters: true)
 ```
 
+## Key Generation
+
+You should generate a key compatible with OpenSSL's `aes-256-cbc` and Base64 encode it(specifically with Base64.strict_encode64). Below snippet can guide you for this purpose.
+
+```ruby
+# generate a key and Base64 encode it in the strict mode
+# most easy and robust way to generate a key is the random_key method.
+encoded_random_key = Base64.strict_encode64(OpenSSL::Cipher::AES.new(256, :CBC).random_key)
+
+# store encoded_random_key string in an environment variable, or somewhere else provided that it is safe.
+# in an initializer initialize sidekiq-crypt with this variable.
+# sidekiq-crypt will decode encoded_random_key and use it for encrytion and decrytion purposes.
+# below ENV['SIDEKIQ_CRYPT_KEY_V1'] should return encoded_random_key
+Sidekiq::Crypt.configure(current_key_version: 'V1', key_store: { V1: ENV['SIDEKIQ_CRYPT_KEY_V1'] })
+
+# you should bump current version up when you want to change your secret.
+# It is important to keep V1 version in the key store
+# until you are certain that no job is stored in redis encrypted with V1 version
+Sidekiq::Crypt.configure(current_key_version: 'V2', key_store: { V1: ENV['SIDEKIQ_CRYPT_KEY_V1'], V2: ENV['SIDEKIQ_CRYPT_KEY_V2'] })
+```
+
 ## Notes
 
 - sidekiq-crypt is a [sidekiq middleware](https://github.com/mperham/sidekiq/wiki/Middleware). You should be careful about middleware ordering. Start sidekiq in verbose mode to see where sidekiq-crypt is in the middleware chain.
