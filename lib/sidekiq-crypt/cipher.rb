@@ -16,7 +16,10 @@ module Sidekiq
         def decrypt(confidential_param, initialization_vector, key_version)
           decryptor_cipher = decryption_cipher(initialization_vector, key_version)
 
-          decryptor_cipher.update(Base64.decode64(confidential_param.to_s)) + decryptor_cipher.final
+          decrypted = decryptor_cipher.update(Base64.decode64(confidential_param.to_s)) +
+                      decryptor_cipher.final
+
+          decrypted.force_encoding('UTF-8')
         end
 
         def random_iv
